@@ -26,6 +26,7 @@ export const ConfigModule = Config.forRoot({
     SMTP_PASSWORD: Joi.string().required(),
     CLIENT_URL: Joi.string().required(),
     BASE_URL: Joi.string().required(),
+    SALT_BCRYPT: Joi.number().required(),
   }),
   envFilePath: '.env',
 });
