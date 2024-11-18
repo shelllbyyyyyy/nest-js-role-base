@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f4f4;
+      }
+      .email-container {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .email-header {
+        background-color: #c72323;
+        color: #ffffff;
+        padding: 20px;
+        text-align: center;
+      }
+      .email-header h1 {
+        margin: 0;
+        font-size: 24px;
+      }
+      .email-body {
+        padding: 20px;
+        color: #333333;
+      }
+      .email-body h2 {
+        color: #c72323;
+      }
+      .email-body p {
+        line-height: 1.6;
+      }
+      .button {
+        display: inline-block;
+        padding: 12px 20px;
+        font-size: 16px;
+        color: #ffffff;
+        background-color: #c72323;
+        text-decoration: none;
+        border-radius: 4px;
+        margin-top: 20px;
+      }
+      .email-footer {
+        background-color: #f4f4f4;
+        color: #777777;
+        padding: 10px;
+        text-align: center;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-container">
+      <div class="email-header">
+        <h1>Thank You for Signing Up!</h1>
+      </div>
+      <div class="email-body">
+        <h2>Hello <%= name %>,</h2>
+        <p>To complete your registration, please confirm your email address by clicking the button below:</p>
+        <a href="<%= confirmation_url %>" class="button">Confirm Email Address</a>
+        <p>This link is expired after 1 minutes.</p>
+        <p>If you didn't create an account using this email address, please ignore this email.</p>
+        <p>Best regards,</p>
+        <p>admin@mangaip.online</p>
+      </div>
+      <div class="email-footer">
+        <p>&copy; 2024 mangaip.online All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>

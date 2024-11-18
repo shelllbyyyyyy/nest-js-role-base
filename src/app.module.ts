@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 
 import { RedisModule } from './shared/libs/redis/redis.module';
 import { DatabaseModule } from './shared/libs/pg/database.module';
+import { MailerModule } from './shared/libs/mailer/mailer.module';
 import { ConfigModule, JwtModule } from './shared/module';
 
 @Module({
@@ -15,6 +16,7 @@ import { ConfigModule, JwtModule } from './shared/module';
     JwtModule,
     RedisModule,
     DatabaseModule,
+    MailerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
