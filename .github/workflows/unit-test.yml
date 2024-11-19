@@ -1,0 +1,48 @@
+name: CI Workflow
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      BASE_URL: ${{ secrets.BASE_URL }}
+      CLIENT_URL: ${{ secrets.CLIENT_URL }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
+      EMAIL_ADMIN: ${{ secrets.EMAIL_ADMIN }}
+      MAIL_HOST: ${{ secrets.MAIL_HOST }}
+      SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      SALT_BCRYPT: ${{ secrets.SALT_BCRYPT }}
+      DB_REDIS_HOST: ${{ secrets.DB_REDIS_HOST }}
+      DB_REDIS_PORT: ${{ secrets.DB_REDIS_PORT }}
+      ACCESS_TOKEN_SECRET: ${{ secrets.ACCESS_TOKEN_SECRET }}
+      REFRESH_TOKEN_SECRET: ${{ secrets.REFRESH_TOKEN_SECRET }}
+      PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+      PUBLIC_KEY: ${{ secrets.PUBLIC_KEY }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate keys
+        run: |
+          mkdir -p keys
+          echo "${{ secrets.PRIVATE_KEY }}" > keys/private.pem
+          echo "${{ secrets.PUBLIC_KEY }}" > keys/public.pem
+
+      - name: Run tests
+        run: npm run test
