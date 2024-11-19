@@ -20,6 +20,8 @@ import {
   username,
   validEmail,
 } from '@/shared/test/constant';
+import { Provider } from '../../domain/value-object/provider';
+import { RoleEntity } from '../../domain/entities/role.entity';
 
 describe('UserService', () => {
   let service: UserService;
@@ -241,7 +243,7 @@ describe('UserService', () => {
   describe('Update Provider', () => {
     it('Should success update provider', async () => {
       const updateUser = newUser;
-      updateUser.setProvider(newProvider);
+      updateUser.setProvider(new Provider(newProvider));
 
       mockUserRepository.updateProvider.mockResolvedValue(true);
 
@@ -255,7 +257,7 @@ describe('UserService', () => {
 
     it('Should fail Update Provider', async () => {
       const updateUser = newUser;
-      updateUser.setProvider(newProvider);
+      updateUser.setProvider(new Provider(newProvider));
 
       mockUserRepository.updateProvider.mockResolvedValue(false);
 
@@ -271,7 +273,7 @@ describe('UserService', () => {
   describe('Update Authorities', () => {
     it('Should success update Authorities', async () => {
       const newAuthorities = authorities;
-      newAuthorities.add(newRole);
+      newAuthorities.add(new RoleEntity(2, newRole));
 
       const updateUser = newUser;
       updateUser.setAuthorities(newAuthorities);
@@ -288,7 +290,7 @@ describe('UserService', () => {
 
     it('Should fail Update Authorities', async () => {
       const newAuthorities = authorities;
-      newAuthorities.add(newRole);
+      newAuthorities.add(new RoleEntity(2, newRole));
 
       const updateUser = newUser;
       updateUser.setAuthorities(newAuthorities);

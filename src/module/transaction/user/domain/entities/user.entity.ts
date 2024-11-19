@@ -27,6 +27,10 @@ export class UserEntity {
     this.isEnabled = true;
   }
 
+  clone(): UserEntity {
+    return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+  }
+
   public get getId() {
     return this.id;
   }

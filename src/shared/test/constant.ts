@@ -8,6 +8,8 @@ import { UserResponse } from '../../module/transaction/user/application/response
 import { ApiResponse } from '@/common/response/api';
 import { HttpStatus } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { UserUpdate } from '../interface/update-payload';
+import { UserPayload } from '@/common/interface/user-payload';
 
 const _id = randomUUID();
 const id = new UserId(_id);
@@ -25,10 +27,10 @@ const invalidEmail = 'test123gmail.com';
 const validEmail = new Email(email);
 
 const role = new RoleEntity(1, 'USER');
-const newRole = new RoleEntity(2, 'ADMIN');
+const newRole = 'ADMIN';
 
-const provider = new Provider(UserProvider.LOCAL);
-const newProvider = new Provider(UserProvider.GOOGLE);
+const provider: UserProvider = <UserProvider>'local';
+const newProvider: UserProvider = <UserProvider>'google';
 
 const authorities = new Set<RoleEntity>();
 authorities.add(role);
@@ -39,7 +41,7 @@ newUser.setUsername(username);
 newUser.setEmail(validEmail);
 newUser.setPassword(hashedPassword);
 newUser.setAuthorities(authorities);
-newUser.setProvider(provider);
+newUser.setProvider(new Provider(provider));
 
 const access_token = 'access_token';
 const refresh_token = 'refresh_token';
@@ -65,6 +67,27 @@ const payload = {
   authorities: userResponse.authorities,
 };
 
+const userPayload: UserUpdate = {
+  current_password: password,
+  email: newEmail,
+  is_verified: true,
+  password: newPassword,
+  provider: newProvider,
+  role: newRole,
+  username: newUsername,
+};
+
+const currentUser: UserPayload = {
+  sub: _id,
+  email,
+  authorities: newUser.getAuthorities.map((o) => {
+    return {
+      role_id: o.getId,
+      authority: o.getAuthority,
+    };
+  }),
+};
+
 const mockRegisterUser = {
   execute: jest.fn(),
 };
@@ -87,6 +110,7 @@ const mockUserService = {
   findById: jest.fn(),
   delete: jest.fn(),
   update: jest.fn(),
+  findAll: jest.fn(),
   changePassword: jest.fn(),
   changeUsername: jest.fn(),
   changeEmail: jest.fn(),
@@ -102,6 +126,7 @@ const mockRedisService = {
 };
 
 const mockUserRepository = {
+  finadAll: jest.fn(),
   save: jest.fn(),
   findByEmail: jest.fn(),
   findById: jest.fn(),
@@ -138,6 +163,28 @@ const deleteUserControllerResponse = new ApiResponse(
   true,
 );
 
+const updateUserControllerResponse = new ApiResponse(
+  HttpStatus.OK,
+  'User updated',
+  true,
+);
+
+const registerUserControllerResponse = new ApiResponse(
+  HttpStatus.CREATED,
+  'Register Successfully',
+  userResponse,
+);
+
+const loginUserControllerResponse = new ApiResponse(
+  HttpStatus.OK,
+  'Login Successfully',
+  null,
+);
+
+function deepCopy<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj));
+}
+
 export {
   newUser,
   authorities,
@@ -169,6 +216,12 @@ export {
   access_token,
   refresh_token,
   payload,
+  userPayload,
+  currentUser,
   findUserByEmailControllerResponse,
   deleteUserControllerResponse,
+  updateUserControllerResponse,
+  registerUserControllerResponse,
+  loginUserControllerResponse,
+  deepCopy,
 };
