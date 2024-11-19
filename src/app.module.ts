@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 import { TransactionModule } from './module/transaction/transaction.module';
+import { NotificationModule } from './module/notification/notification.module';
 import { AuthModule } from './module/auth/auth.module';
 
 import { RedisModule } from './shared/libs/redis/redis.module';
@@ -17,6 +18,7 @@ import { ConfigModule, JwtModule } from './shared/module';
     EventEmitterModule.forRoot(),
     ConfigModule,
     TransactionModule,
+    NotificationModule,
     AuthModule,
     JwtModule,
     RedisModule,
