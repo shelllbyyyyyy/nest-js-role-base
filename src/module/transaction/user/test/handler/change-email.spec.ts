@@ -72,6 +72,7 @@ describe('Change Email Handler', () => {
 
     mockBcryptService.comparePassword.mockResolvedValue(true);
     mockUserService.changeEmail.mockResolvedValue(true);
+    mockRedisService.del.mockResolvedValue(1);
     mockRedisService.set.mockResolvedValueOnce(updatedResponse);
     mockRedisService.set.mockResolvedValueOnce(updatedResponse);
 
@@ -81,6 +82,9 @@ describe('Change Email Handler', () => {
     expect(mockBcryptService.comparePassword).toHaveBeenCalledWith(
       userPayload.current_password,
       userResponse.password,
+    );
+    expect(mockRedisService.del).toHaveBeenCalledWith(
+      `user with ${userResponse.email}: `,
     );
     expect(mockRedisService.set).toHaveBeenCalledTimes(2);
     expect(mockRedisService.set).toHaveBeenNthCalledWith(
