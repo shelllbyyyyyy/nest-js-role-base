@@ -46,6 +46,8 @@ export class ChangeEmail
       const response = UserFactory.toResponse(user);
 
       await Promise.all([
+        this.redisService.del(`user with ${data.email}: `),
+
         this.redisService.set(
           `user with ${user.getEmail.getValue}: `,
           response,
