@@ -9,7 +9,7 @@ import { RoleResponse } from '@/module/transaction/user/application/response/use
 import { UserPayload } from '../interface/user-payload';
 
 @Injectable()
-export class AdminStrategy extends PassportStrategy(Strategy) {
+export class AdminStrategy extends PassportStrategy(Strategy, 'jwt-admin') {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([

@@ -8,7 +8,7 @@ import { publicKey } from '@/shared/module';
 import { UserPayload } from '../interface/user-payload';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([

@@ -15,7 +15,11 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { ApiResponse } from '@/common/response/api';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { InvalidInputError } from '@/common/exceptions/invalid-input.error';
+import { User } from '@/common/decorator/user.decorator';
+import { UserPayload } from '@/common/interface/user-payload';
 import { AdminAuthGuard } from '@/common/guards/admin-auth.guard';
+import { UserUpdate } from '@/shared/interface/update-payload';
 
 import { HandlerService } from '../../application/handler/handler-service';
 import { FindByEmail } from '../../application/use-case/find-by-email';
@@ -23,10 +27,6 @@ import { DeleteUser } from '../../application/use-case/delete-user';
 import { FindById } from '../../application/use-case/find-by-id';
 import { FindAll } from '../../application/use-case/find-all';
 import { UpdateUserDTO } from '../dto/update-user.dto';
-import { UserUpdate } from '@/shared/interface/update-payload';
-import { InvalidInputError } from '@/common/exceptions/invalid-input.error';
-import { User } from '@/common/decorator/user.decorator';
-import { UserPayload } from '@/common/interface/user-payload';
 
 @Controller('users')
 export class UserController {
