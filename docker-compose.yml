@@ -1,0 +1,58 @@
+services:
+  postgres-primary:
+    image: postgres:13
+    container_name: postgres-primary
+    ports:
+      - '8888:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: solid
+    volumes:
+      - data_postgresql:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    networks:
+      - app-network
+
+  redis-primary:
+    image: 'redis:alpine'
+    container_name: redis-primary
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+    networks:
+      - app-network
+
+  nest-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    env_file:
+      - ./.env
+    ports:
+      - '4000:4000'
+    depends_on:
+      redis-primary:
+        condition: service_healthy
+      postgres-primary:
+        condition: service_healthy
+    networks:
+      - app-network
+
+volumes:
+  data_postgresql:
+networks:
+  app-network:
+    driver: bridge
