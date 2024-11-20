@@ -7,6 +7,7 @@ import { UserId } from '../../domain/value-object/userId';
 
 import {
   authorities,
+  copyUser,
   id,
   invalidEmail,
   mockUserRepository,
@@ -330,6 +331,50 @@ describe('UserService', () => {
 
       expect(result).toBeFalsy();
       expect(mockUserRepository.verifyUser).toHaveBeenCalledWith(updateUser);
+    });
+  });
+
+  describe('Find All User', () => {
+    it('Should return list of user', async () => {
+      mockUserRepository.findAll.mockResolvedValue([newUser, copyUser]);
+
+      const result = await service.findAll();
+
+      expect(result).toEqual([newUser, copyUser]);
+      expect(mockUserRepository.findAll).toHaveBeenCalled();
+    });
+
+    it('Should return list of user zero', async () => {
+      mockUserRepository.findAll.mockResolvedValue([]);
+
+      const result = await service.findAll();
+
+      expect(result).toEqual([]);
+      expect(mockUserRepository.findAll).toHaveBeenCalled();
+    });
+  });
+
+  describe('Find User By Filter', () => {
+    it('Should return list of user', async () => {
+      mockUserRepository.filterBy.mockResolvedValue([newUser, copyUser]);
+
+      const result = await service.findByFilter({ email: validEmail });
+
+      expect(result).toEqual([newUser, copyUser]);
+      expect(mockUserRepository.filterBy).toHaveBeenCalledWith({
+        email: validEmail,
+      });
+    });
+
+    it('Should return list of user zero', async () => {
+      mockUserRepository.filterBy.mockResolvedValue([]);
+
+      const result = await service.findByFilter({ email: validEmail });
+
+      expect(result).toEqual([]);
+      expect(mockUserRepository.filterBy).toHaveBeenCalledWith({
+        email: validEmail,
+      });
     });
   });
 

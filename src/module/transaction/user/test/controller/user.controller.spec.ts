@@ -1,15 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 import { RedisService } from '@/shared/libs/redis/redis.service';
-
-import { UserService } from '../../domain/services/user.service';
-import { UserRepository } from '../../domain/repositories/user.repository';
-import { UserController } from '../../presentation/controller/user.controller';
-import { FindByEmail } from '../../application/use-case/find-by-email';
-import { DeleteUser } from '../../application/use-case/delete-user';
-import { FindById } from '../../application/use-case/find-by-id';
-import { FindAll } from '../../application/use-case/find-all';
+import { BcryptService } from '@/shared/libs/bcrypt';
 import {
   email,
   mockRedisService,
@@ -36,12 +34,17 @@ import {
   newProvider,
   role,
   newRole,
+  findAllUserControllerResponse,
+  findAllUserControllerResponsePagination,
 } from '@/shared/test/constant';
-import {
-  BadRequestException,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+
+import { UserService } from '../../domain/services/user.service';
+import { UserRepository } from '../../domain/repositories/user.repository';
+import { UserController } from '../../presentation/controller/user.controller';
+import { FindByEmail } from '../../application/use-case/find-by-email';
+import { DeleteUser } from '../../application/use-case/delete-user';
+import { FindById } from '../../application/use-case/find-by-id';
+import { FindAll } from '../../application/use-case/find-all';
 import { HandlerService } from '../../application/handler/handler-service';
 import { UserActionFactory } from '../../application/factory/user-action-factory';
 import { ChangePassword } from '../../application/handler/change-password';
@@ -50,10 +53,10 @@ import { ChangeEmail } from '../../application/handler/change-email';
 import { UpdateAuthorities } from '../../application/handler/update-authorities';
 import { UpdateProvider } from '../../application/handler/update-provider';
 import { VerifyUser } from '../../application/handler/verify-user';
-import { BcryptService } from '@/shared/libs/bcrypt';
 import { Email } from '../../domain/value-object/email';
 import { Provider } from '../../domain/value-object/provider';
 import { RoleEntity } from '../../domain/entities/role.entity';
+import { FindByFilter } from '../../application/use-case/find-by-filter';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -64,6 +67,7 @@ describe('UserController', () => {
   let userService: UserService;
   let redisService: RedisService;
   let findAll: FindAll;
+  let findByFilter: FindByFilter;
   let handlerService: HandlerService;
   let userActionFactory: UserActionFactory;
   let changePassword: ChangePassword;
@@ -91,6 +95,7 @@ describe('UserController', () => {
         UpdateAuthorities,
         UpdateProvider,
         VerifyUser,
+        FindByFilter,
         {
           provide: BcryptService,
           useValue: mockBcryptService,
@@ -118,6 +123,7 @@ describe('UserController', () => {
     redisService = module.get<RedisService>(RedisService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     findAll = module.get<FindAll>(FindAll);
+    findByFilter = module.get<FindByFilter>(FindByFilter);
     handlerService = module.get<HandlerService>(HandlerService);
     userActionFactory = module.get<UserActionFactory>(UserActionFactory);
     changePassword = module.get<ChangePassword>(ChangePassword);
@@ -127,6 +133,7 @@ describe('UserController', () => {
     updateAuthorities = module.get<UpdateAuthorities>(UpdateAuthorities);
     verifyUser = module.get<VerifyUser>(VerifyUser);
     bcryptService = module.get<BcryptService>(BcryptService);
+    findByFilter = module.get<FindByFilter>(FindByFilter);
 
     jest.clearAllMocks();
   });
@@ -149,6 +156,80 @@ describe('UserController', () => {
     expect(updateProvider).toBeDefined();
     expect(verifyUser).toBeDefined();
     expect(bcryptService).toBeDefined();
+    expect(findByFilter).toBeDefined();
+  });
+
+  describe('Find all user', () => {
+    it('Should return list of user', async () => {
+      mockUserService.findAll.mockResolvedValue([newUser, newUser]);
+
+      const result = await controller.findAllUser();
+
+      expect(result).toEqual(findAllUserControllerResponse);
+      expect(mockUserService.findAll).toHaveBeenCalled();
+    });
+
+    it('Should return list of user zero', async () => {
+      mockUserService.findAll.mockResolvedValue([]);
+
+      const result = await controller.findAllUser();
+
+      const copy = findAllUserControllerResponse.clone();
+      copy.data = [];
+
+      expect(result).toEqual(copy);
+      expect(mockUserService.findAll).toHaveBeenCalled();
+    });
+  });
+
+  describe('Find user by filter', () => {
+    it('Should return list of user', async () => {
+      mockUserService.findByFilter.mockResolvedValue([newUser, newUser]);
+
+      const result = await controller.findUserByFilter({
+        email: email,
+      });
+
+      expect(result).toEqual(findAllUserControllerResponse);
+      expect(mockUserService.findByFilter).toHaveBeenCalledWith({
+        email: validEmail,
+        offset: 0,
+      });
+    });
+
+    it('Should return list of user zero', async () => {
+      mockUserService.findByFilter.mockResolvedValue([]);
+
+      const result = await controller.findUserByFilter({
+        email: email,
+      });
+
+      const copy = findAllUserControllerResponse.clone();
+      copy.data = [];
+
+      expect(result).toEqual(copy);
+      expect(mockUserService.findByFilter).toHaveBeenCalledWith({
+        email: validEmail,
+        offset: 0,
+      });
+    });
+
+    it('Should return list of user with pagination', async () => {
+      mockUserService.findByFilter.mockResolvedValue([newUser, newUser]);
+
+      const result = await controller.findUserByFilter({
+        email: email,
+        limit: 5,
+        page: 1,
+      });
+
+      expect(result).toEqual(findAllUserControllerResponsePagination);
+      expect(mockUserService.findByFilter).toHaveBeenCalledWith({
+        email: validEmail,
+        limit: 5,
+        offset: 0,
+      });
+    });
   });
 
   describe('Find user by email use case', () => {

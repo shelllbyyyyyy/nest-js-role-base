@@ -1,3 +1,9 @@
+import { HttpStatus } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+
+import { ApiResponse, ApiResponsePagination } from '@/common/response/api';
+import { UserPayload } from '@/common/interface/user-payload';
+
 import { RoleEntity } from '../../module/transaction/user/domain/entities/role.entity';
 import { UserEntity } from '../../module/transaction/user/domain/entities/user.entity';
 import { Email } from '../../module/transaction/user/domain/value-object/email';
@@ -5,11 +11,8 @@ import { Provider as UserProvider } from '../../module/transaction/user/domain/e
 import { Provider } from '../../module/transaction/user/domain/value-object/provider';
 import { UserId } from '../../module/transaction/user/domain/value-object/userId';
 import { UserResponse } from '../../module/transaction/user/application/response/user.reposne';
-import { ApiResponse } from '@/common/response/api';
-import { HttpStatus } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+
 import { UserUpdate } from '../interface/update-payload';
-import { UserPayload } from '@/common/interface/user-payload';
 
 const _id = randomUUID();
 const id = new UserId(_id);
@@ -128,6 +131,7 @@ const mockUserService = {
   updateProvider: jest.fn(),
   updateAuthorities: jest.fn(),
   verifyUser: jest.fn(),
+  findByFilter: jest.fn(),
 };
 
 const mockRedisService = {
@@ -143,12 +147,14 @@ const mockUserRepository = {
   findById: jest.fn(),
   delete: jest.fn(),
   update: jest.fn(),
+  findAll: jest.fn(),
   changePassword: jest.fn(),
   changeUsername: jest.fn(),
   changeEmail: jest.fn(),
   updateProvider: jest.fn(),
   updateAuthorities: jest.fn(),
   verifyUser: jest.fn(),
+  filterBy: jest.fn(),
 };
 
 const mockBcryptService = {
@@ -166,6 +172,12 @@ const findUserByEmailControllerResponse = new ApiResponse(
   HttpStatus.OK,
   'User found',
   userResponse,
+);
+
+const findAllUserControllerResponse = new ApiResponse(
+  HttpStatus.OK,
+  'Users found',
+  [userResponse, userResponse],
 );
 
 const deleteUserControllerResponse = new ApiResponse(
@@ -196,6 +208,16 @@ const oAuthControllerResponse = new ApiResponse(
   HttpStatus.OK,
   'OAuth success',
   null,
+);
+
+const findAllUserControllerResponsePagination = new ApiResponsePagination(
+  HttpStatus.OK,
+  'Users found',
+  [userResponse, userResponse],
+  2,
+  5,
+  1,
+  1,
 );
 
 function deepCopy<T>(obj: T): T {
@@ -245,4 +267,6 @@ export {
   copyUserResponse,
   copyUser,
   oAuthControllerResponse,
+  findAllUserControllerResponse,
+  findAllUserControllerResponsePagination,
 };
