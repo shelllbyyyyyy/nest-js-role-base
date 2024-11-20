@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { DatabaseService } from '@/shared/libs/pg/database.service';
 
@@ -11,6 +11,8 @@ import { Provider } from '../../../domain/enum/provider';
 
 @Injectable()
 export class UserRepositoryImpl implements UserRepository {
+  private readonly logger = new Logger(UserRepositoryImpl.name);
+
   constructor(private readonly db: DatabaseService) {}
 
   async findAll(): Promise<UserEntity[]> {
@@ -29,6 +31,8 @@ export class UserRepositoryImpl implements UserRepository {
 
     const result = await this.db.query(query);
 
+    this.logger.log(`Rows affected: ${result.rowCount}`);
+
     if (result.rows.length == 0) return [];
 
     return UserFactory.toDomains(result.rows);
@@ -39,7 +43,7 @@ export class UserRepositoryImpl implements UserRepository {
     const username = data.getUsername;
     const email = data.getEmail.getValue;
     const password = data.getPassword;
-    const provider = Provider.LOCAL;
+    const provider = <Provider>data.getProvider.getValue;
     const is_verified = data.getIsVerified;
     const role_id = data.getAuthorities.map((i) => i.getId);
 
@@ -75,6 +79,10 @@ export class UserRepositoryImpl implements UserRepository {
       role_id[0],
     ]);
 
+    this.logger.log(`Rows affected: ${result.rowCount}`);
+
+    if ((result.rowCount = 0)) return null;
+
     return UserFactory.toDomain(result.rows[0]);
   }
 
@@ -95,6 +103,8 @@ export class UserRepositoryImpl implements UserRepository {
                    `;
 
     const result = await this.db.query(query, [email.getValue]);
+
+    this.logger.log(`Rows affected: ${result.rowCount}`);
 
     if (result.rows.length == 0) return null;
 
@@ -119,6 +129,8 @@ export class UserRepositoryImpl implements UserRepository {
 
     const result = await this.db.query(query, [id.getValue]);
 
+    this.logger.log(`Rows affected: ${result.rowCount}`);
+
     if (result.rows.length == 0) return null;
 
     return UserFactory.toDomain(result.rows[0]);
@@ -128,6 +140,8 @@ export class UserRepositoryImpl implements UserRepository {
     const query = `DELETE FROM users  WHERE email = $1;`;
 
     const result = await this.db.query(query, [data.getEmail.getValue]);
+
+    this.logger.log(`Rows affected: ${result.rowCount}`);
     if (result.rowCount == 0) return false;
 
     return true;
@@ -151,6 +165,8 @@ export class UserRepositoryImpl implements UserRepository {
       is_verified,
       provider,
     ]);
+
+    this.logger.log(`Rows affected: ${result.rowCount}`);
     if (result.rowCount == 0) return false;
 
     return true;
@@ -165,6 +181,8 @@ export class UserRepositoryImpl implements UserRepository {
                    WHERE id = $1;`;
 
     const result = await this.db.query(query, [id, email]);
+
+    this.logger.log(`Rows affected: ${result.rowCount}`);
     if (result.rowCount == 0) return false;
 
     return true;
@@ -179,6 +197,8 @@ export class UserRepositoryImpl implements UserRepository {
                    WHERE id = $1;`;
 
     const result = await this.db.query(query, [id, username]);
+
+    this.logger.log(`Rows affected: ${result.rowCount}`);
     if (result.rowCount == 0) return false;
 
     return true;
@@ -193,6 +213,8 @@ export class UserRepositoryImpl implements UserRepository {
                    WHERE id = $1;`;
 
     const result = await this.db.query(query, [id, password]);
+
+    this.logger.log(`Rows affected: ${result.rowCount}`);
     if (result.rowCount == 0) return false;
 
     return true;
@@ -223,7 +245,11 @@ export class UserRepositoryImpl implements UserRepository {
     const results = await this.db.transactions(queries);
 
     if (results) {
-      return results.every((result) => result.rowCount > 0);
+      return results.every((result) => {
+        this.logger.log(`Rows affected: ${result.rowCount}`);
+
+        return result.rowCount > 0;
+      });
     }
 
     return false;
@@ -238,6 +264,8 @@ export class UserRepositoryImpl implements UserRepository {
                    WHERE id = $1;`;
 
     const result = await this.db.query(query, [id, provider]);
+
+    this.logger.log(`Rows affected: ${result.rowCount}`);
     if (result.rowCount == 0) return false;
 
     return true;
@@ -252,6 +280,8 @@ export class UserRepositoryImpl implements UserRepository {
                    WHERE id = $1;`;
 
     const result = await this.db.query(query, [id, is_verified]);
+
+    this.logger.log(`Rows affected: ${result.rowCount}`);
     if (result.rowCount == 0) return false;
 
     return true;
