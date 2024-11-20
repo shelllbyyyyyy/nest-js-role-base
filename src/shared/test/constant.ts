@@ -32,6 +32,8 @@ const newRole = 'ADMIN';
 const provider: UserProvider = <UserProvider>'local';
 const newProvider: UserProvider = <UserProvider>'google';
 
+const userProvider = new Provider(newProvider);
+
 const authorities = new Set<RoleEntity>();
 authorities.add(role);
 
@@ -77,6 +79,14 @@ const userPayload: UserUpdate = {
   username: newUsername,
 };
 
+const copyUser = newUser.clone();
+copyUser.setIsVerified(true);
+copyUser.setProvider(userProvider);
+
+const copyUserResponse = deepCopy(userResponse);
+copyUserResponse.is_verified = true;
+copyUserResponse.provider = newProvider;
+
 const currentUser: UserPayload = {
   sub: _id,
   email,
@@ -106,6 +116,7 @@ const mockDeleteUser = {
 
 const mockUserService = {
   createUser: jest.fn(),
+  createUserOAuth: jest.fn(),
   findByEmail: jest.fn(),
   findById: jest.fn(),
   delete: jest.fn(),
@@ -181,6 +192,12 @@ const loginUserControllerResponse = new ApiResponse(
   null,
 );
 
+const oAuthControllerResponse = new ApiResponse(
+  HttpStatus.OK,
+  'OAuth success',
+  null,
+);
+
 function deepCopy<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
@@ -224,4 +241,8 @@ export {
   registerUserControllerResponse,
   loginUserControllerResponse,
   deepCopy,
+  userProvider,
+  copyUserResponse,
+  copyUser,
+  oAuthControllerResponse,
 };

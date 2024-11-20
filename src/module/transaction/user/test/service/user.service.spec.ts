@@ -18,6 +18,7 @@ import {
   newUsername,
   password,
   username,
+  userProvider,
   validEmail,
 } from '@/shared/test/constant';
 import { Provider } from '../../domain/value-object/provider';
@@ -329,6 +330,39 @@ describe('UserService', () => {
 
       expect(result).toBeFalsy();
       expect(mockUserRepository.verifyUser).toHaveBeenCalledWith(updateUser);
+    });
+  });
+
+  describe('Create User OAuth', () => {
+    it('Should create user sucessfully', async () => {
+      mockUserRepository.save.mockResolvedValue(newUser);
+
+      const result = await service.createUserOAuth(
+        username,
+        validEmail,
+        password,
+        userProvider,
+        authorities,
+      );
+
+      expect(result).toEqual(newUser);
+      expect(mockUserRepository.save).toHaveBeenCalled();
+    });
+
+    it('Should create user fail with invalid email format', async () => {
+      mockUserRepository.save.mockResolvedValue(null);
+
+      expect(
+        async () =>
+          await service.createUserOAuth(
+            username,
+            new Email(invalidEmail),
+            password,
+            userProvider,
+            authorities,
+          ),
+      ).rejects.toThrow(new Error('Invalid email format'));
+      expect(mockUserRepository.save).not.toHaveBeenCalled();
     });
   });
 });

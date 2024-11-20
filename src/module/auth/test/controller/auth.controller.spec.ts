@@ -10,6 +10,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ValidateUserCredentials } from '../../application/use-case/validate-user-credentials';
 import {
   access_token,
+  authorities,
+  copyUser,
+  copyUserResponse,
   email,
   hashedPassword,
   loginUserControllerResponse,
@@ -19,12 +22,15 @@ import {
   mockUserService,
   newEmail,
   newPassword,
+  newProvider,
   newUser,
+  oAuthControllerResponse,
   password,
   payload,
   refresh_token,
   registerUserControllerResponse,
   username,
+  userProvider,
   userResponse,
   validEmail,
 } from '@/shared/test/constant';
@@ -33,9 +39,12 @@ import {
   BadRequestException,
   HttpStatus,
   UnauthorizedException,
+  Param,
 } from '@nestjs/common';
-import { Response, response } from 'express';
+import { Request, Response } from 'express';
 import { Email } from '@/module/transaction/user/domain/value-object/email';
+import { OAuth } from '@/module/transaction/user/application/use-case/oauth';
+import { RegisterDTO } from '../../presentation/dto/register.dto';
 
 describe('AuthController', () => {
   let registerUser: RegisterUser;
@@ -48,12 +57,29 @@ describe('AuthController', () => {
   let tokenizer: Tokenizer;
   let generateJwtToken: GenerateJwtToken;
   let validateUserCredentials: ValidateUserCredentials;
+  let oAuth: OAuth;
   let res: Response;
+  let req: Request;
+  let param: typeof Param;
 
   const mockResponse = {
     status: jest.fn().mockReturnThis(),
     cookie: jest.fn(),
     json: jest.fn(),
+  };
+
+  const user = {
+    username,
+    email,
+    password,
+  };
+
+  interface AuthenticatedRequest extends Request {
+    user: RegisterDTO;
+  }
+
+  const mockRequest = {
+    user,
   };
 
   beforeEach(async () => {
@@ -65,6 +91,7 @@ describe('AuthController', () => {
         ValidateUserCredentials,
         EventEmitter2,
         RegisterUser,
+        OAuth,
         {
           provide: Tokenizer,
           useValue: mockTokenizer,
@@ -96,7 +123,9 @@ describe('AuthController', () => {
     tokenizer = module.get<Tokenizer>(Tokenizer);
     bcryptService = module.get<BcryptService>(BcryptService);
     registerUser = module.get<RegisterUser>(RegisterUser);
+    oAuth = module.get<OAuth>(OAuth);
     res = mockResponse as unknown as Response;
+    req = mockRequest as unknown as AuthenticatedRequest;
 
     jest.clearAllMocks();
   });
@@ -112,6 +141,81 @@ describe('AuthController', () => {
     expect(generateJwtToken).toBeDefined();
     expect(userService).toBeDefined();
     expect(registerUser).toBeDefined();
+    expect(oAuth).toBeDefined();
+  });
+
+  describe('OAuth', () => {
+    it('Should success login with exist data response from database', async () => {
+      mockRedisService.get.mockResolvedValue(null);
+      mockUserService.findByEmail.mockResolvedValue(copyUser);
+      mockRedisService.set.mockResolvedValue(copyUserResponse);
+      mockUserService.createUserOAuth.mockResolvedValue(null);
+      mockTokenizer.generateToken.mockResolvedValueOnce(access_token);
+      mockTokenizer.generateToken.mockResolvedValueOnce(refresh_token);
+
+      const result = await controller.handleOAuthCallback(
+        req,
+        res,
+        newProvider,
+        '200',
+      );
+
+      expect(result).toEqual(
+        mockResponse.status(HttpStatus.OK).json(oAuthControllerResponse),
+      );
+      expect(mockRedisService.get).toHaveBeenCalledWith(
+        `user with ${copyUser.getEmail.getValue}: `,
+      );
+      expect(mockUserService.findByEmail).toHaveBeenCalledWith(validEmail);
+      expect(mockRedisService.set).toHaveBeenCalledWith(
+        `user with ${copyUser.getEmail.getValue}: `,
+        copyUserResponse,
+        7 * 24 * 60 * 60,
+      );
+      expect(mockUserService.createUserOAuth).not.toHaveBeenCalledWith(
+        username,
+        validEmail,
+        hashedPassword,
+        userProvider,
+        authorities,
+      );
+      expect(mockTokenizer.generateToken).toHaveBeenCalledTimes(2);
+      expect(mockTokenizer.generateToken).toHaveBeenNthCalledWith(
+        1,
+        payload,
+        '1h',
+      );
+      expect(mockTokenizer.generateToken).toHaveBeenNthCalledWith(
+        2,
+        payload,
+        '7d',
+      );
+      expect(mockResponse.cookie).toHaveBeenCalledTimes(2);
+      expect(mockResponse.cookie).toHaveBeenNthCalledWith(
+        1,
+        'access_token',
+        access_token,
+        {
+          httpOnly: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 60 * 60 * 60,
+          path: '/',
+        },
+      );
+      expect(mockResponse.cookie).toHaveBeenNthCalledWith(
+        2,
+        'refresh_token',
+        refresh_token,
+        {
+          httpOnly: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 7 * 24 * 60 * 60,
+          path: '/',
+        },
+      );
+    });
   });
 
   describe('Register user', () => {
@@ -306,8 +410,6 @@ describe('AuthController', () => {
       mockBcryptService.comparePassword.mockResolvedValue(true);
       mockTokenizer.generateToken.mockResolvedValueOnce(access_token);
       mockTokenizer.generateToken.mockResolvedValueOnce(refresh_token);
-      mockResponse.cookie.mockResolvedValueOnce(access_token);
-      mockResponse.cookie.mockResolvedValueOnce(refresh_token);
 
       const result = await controller.login({ email, password }, res);
 
@@ -339,7 +441,8 @@ describe('AuthController', () => {
         '7d',
       );
       expect(mockResponse.cookie).toHaveBeenCalledTimes(2);
-      expect(mockResponse.cookie).toHaveBeenCalledWith(
+      expect(mockResponse.cookie).toHaveBeenNthCalledWith(
+        1,
         'access_token',
         access_token,
         {
@@ -350,7 +453,8 @@ describe('AuthController', () => {
           path: '/',
         },
       );
-      expect(mockResponse.cookie).toHaveBeenCalledWith(
+      expect(mockResponse.cookie).toHaveBeenNthCalledWith(
+        2,
         'refresh_token',
         refresh_token,
         {
@@ -370,8 +474,6 @@ describe('AuthController', () => {
       mockBcryptService.comparePassword.mockResolvedValue(true);
       mockTokenizer.generateToken.mockResolvedValueOnce(access_token);
       mockTokenizer.generateToken.mockResolvedValueOnce(refresh_token);
-      mockResponse.cookie.mockResolvedValueOnce(access_token);
-      mockResponse.cookie.mockResolvedValueOnce(refresh_token);
 
       const result = await controller.login({ email, password }, res);
 
@@ -403,7 +505,8 @@ describe('AuthController', () => {
         '7d',
       );
       expect(mockResponse.cookie).toHaveBeenCalledTimes(2);
-      expect(mockResponse.cookie).toHaveBeenCalledWith(
+      expect(mockResponse.cookie).toHaveBeenNthCalledWith(
+        1,
         'access_token',
         access_token,
         {
@@ -414,7 +517,8 @@ describe('AuthController', () => {
           path: '/',
         },
       );
-      expect(mockResponse.cookie).toHaveBeenCalledWith(
+      expect(mockResponse.cookie).toHaveBeenNthCalledWith(
+        2,
         'refresh_token',
         refresh_token,
         {
@@ -434,8 +538,6 @@ describe('AuthController', () => {
       mockBcryptService.comparePassword.mockResolvedValue(false);
       mockTokenizer.generateToken.mockResolvedValueOnce(null);
       mockTokenizer.generateToken.mockResolvedValueOnce(null);
-      mockResponse.cookie.mockResolvedValueOnce(null);
-      mockResponse.cookie.mockResolvedValueOnce(null);
 
       await expect(
         controller.login({ email: newEmail, password }, res),
@@ -468,7 +570,8 @@ describe('AuthController', () => {
         '7d',
       );
       expect(mockResponse.cookie).not.toHaveBeenCalledTimes(2);
-      expect(mockResponse.cookie).not.toHaveBeenCalledWith(
+      expect(mockResponse.cookie).not.toHaveBeenNthCalledWith(
+        1,
         'access_token',
         access_token,
         {
@@ -479,7 +582,8 @@ describe('AuthController', () => {
           path: '/',
         },
       );
-      expect(mockResponse.cookie).not.toHaveBeenCalledWith(
+      expect(mockResponse.cookie).not.toHaveBeenNthCalledWith(
+        2,
         'refresh_token',
         refresh_token,
         {
@@ -499,8 +603,6 @@ describe('AuthController', () => {
       mockBcryptService.comparePassword.mockResolvedValue(false);
       mockTokenizer.generateToken.mockResolvedValueOnce(null);
       mockTokenizer.generateToken.mockResolvedValueOnce(null);
-      mockResponse.cookie.mockResolvedValueOnce(null);
-      mockResponse.cookie.mockResolvedValueOnce(null);
 
       await expect(
         controller.login({ email, password: newPassword }, res),
@@ -531,7 +633,8 @@ describe('AuthController', () => {
         '7d',
       );
       expect(mockResponse.cookie).not.toHaveBeenCalledTimes(2);
-      expect(mockResponse.cookie).not.toHaveBeenCalledWith(
+      expect(mockResponse.cookie).not.toHaveBeenNthCalledWith(
+        1,
         'access_token',
         access_token,
         {
@@ -542,7 +645,8 @@ describe('AuthController', () => {
           path: '/',
         },
       );
-      expect(mockResponse.cookie).not.toHaveBeenCalledWith(
+      expect(mockResponse.cookie).not.toHaveBeenNthCalledWith(
+        2,
         'refresh_token',
         refresh_token,
         {
@@ -562,8 +666,6 @@ describe('AuthController', () => {
       mockBcryptService.comparePassword.mockResolvedValue(false);
       mockTokenizer.generateToken.mockResolvedValueOnce(null);
       mockTokenizer.generateToken.mockResolvedValueOnce(null);
-      mockResponse.cookie.mockResolvedValueOnce(null);
-      mockResponse.cookie.mockResolvedValueOnce(null);
 
       expect(
         async () => await controller.login({ email: '123df', password }, res),
@@ -591,7 +693,8 @@ describe('AuthController', () => {
         '7d',
       );
       expect(mockResponse.cookie).not.toHaveBeenCalledTimes(2);
-      expect(mockResponse.cookie).not.toHaveBeenCalledWith(
+      expect(mockResponse.cookie).not.toHaveBeenNthCalledWith(
+        1,
         'access_token',
         access_token,
         {
@@ -602,7 +705,8 @@ describe('AuthController', () => {
           path: '/',
         },
       );
-      expect(mockResponse.cookie).not.toHaveBeenCalledWith(
+      expect(mockResponse.cookie).not.toHaveBeenNthCalledWith(
+        2,
         'refresh_token',
         refresh_token,
         {
