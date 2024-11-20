@@ -37,6 +37,24 @@ export class UserService {
     return await this.userRepository.save(newUser);
   }
 
+  async createUserOAuth(
+    username: string,
+    email: Email,
+    password: string,
+    provider: Provider,
+    authorities: Set<RoleEntity>,
+  ): Promise<UserEntity> {
+    const newUser = new UserEntity();
+    newUser.setUsername(username);
+    newUser.setEmail(email);
+    newUser.setPassword(password);
+    newUser.setAuthorities(authorities);
+    newUser.setProvider(provider);
+    newUser.setIsVerified(true);
+
+    return await this.userRepository.save(newUser);
+  }
+
   async findById(userId: UserId): Promise<UserEntity | null> {
     return await this.userRepository.findById(userId);
   }
