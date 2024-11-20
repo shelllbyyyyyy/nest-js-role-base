@@ -51,9 +51,49 @@ export class ApiResponse<T> {
   constructor(code: number, message: string, data: T) {
     this.code = code;
     this.status = getStatus(code);
+    this.errors = null;
     this.message = message;
     this.data = data;
+  }
+
+  clone(): ApiResponse<T> {
+    return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+  }
+}
+
+export class ApiResponsePagination<T> {
+  code: number;
+  status: STATUS;
+  message: string;
+  errors: string | null;
+  data: T;
+  page: number;
+  total: number;
+  limit: number;
+  total_pages: number;
+
+  constructor(
+    code: number,
+    message: string,
+    data: T,
+    total: number,
+    limit: number,
+    page: number,
+    total_pages: number,
+  ) {
+    this.code = code;
+    this.status = getStatus(code);
     this.errors = null;
+    this.message = message;
+    this.data = data;
+    this.limit = limit;
+    this.page = page;
+    this.total_pages = total_pages;
+    this.total = total;
+  }
+
+  clone(): ApiResponsePagination<T> {
+    return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
   }
 }
 
