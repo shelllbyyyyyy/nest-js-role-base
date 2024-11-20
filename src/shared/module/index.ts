@@ -27,6 +27,10 @@ export const ConfigModule = Config.forRoot({
     CLIENT_URL: Joi.string().required(),
     BASE_URL: Joi.string().required(),
     SALT_BCRYPT: Joi.number().required(),
+    GOOGLE_CLIENT_ID: Joi.string().required(),
+    GOOGLE_CLIENT_SECRET: Joi.string().required(),
+    GITHUB_CLIENT_ID: Joi.string().required(),
+    GITHUB_CLIENT_SECRET: Joi.string().required(),
   }),
   envFilePath: '.env',
 });
