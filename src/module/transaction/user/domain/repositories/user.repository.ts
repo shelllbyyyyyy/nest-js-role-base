@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { UserEntity } from '../entities/user.entity';
 import { UserId } from '../value-object/userId';
 import { Email } from '../value-object/email';
+import { Filter } from '../services/user.service';
 
 @Injectable()
 export abstract class UserRepository {
@@ -18,4 +19,5 @@ export abstract class UserRepository {
   abstract updateProvider(data: UserEntity): Promise<boolean>;
   abstract updateAuthorities(data: UserEntity): Promise<boolean>;
   abstract verifyUser(data: UserEntity): Promise<boolean>;
+  abstract filterBy(data: Filter): Promise<UserEntity[]>;
 }

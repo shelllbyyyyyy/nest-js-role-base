@@ -4,10 +4,11 @@ import { DatabaseService } from '@/shared/libs/pg/database.service';
 
 import { UserRepository } from '../../../domain/repositories/user.repository';
 import { UserEntity } from '../../../domain/entities/user.entity';
-import { Email } from '../../../domain/value-object/email';
-import { UserId } from '../../../domain/value-object/userId';
 import { UserFactory } from '../../../domain/factories/user.factory';
 import { Provider } from '../../../domain/enum/provider';
+import { Filter } from '../../../domain/services/user.service';
+import { Email } from '../../../domain/value-object/email';
+import { UserId } from '../../../domain/value-object/userId';
 
 @Injectable()
 export class UserRepositoryImpl implements UserRepository {
@@ -285,5 +286,102 @@ export class UserRepositoryImpl implements UserRepository {
     if (result.rowCount == 0) return false;
 
     return true;
+  }
+
+  async filterBy(data: Filter): Promise<UserEntity[]> {
+    const baseQuery = `
+        SELECT 
+          u.id, u.username, u.email, u.password, u.provider, u.is_verified,
+          ARRAY_AGG(jsonb_build_object('role_id', r.role_id, 'authority', r.authority)) AS authorities
+        FROM users u
+        LEFT JOIN user_role_junction urj ON u.id = urj.user_id
+        LEFT JOIN roles r ON urj.role_id = r.role_id
+    `;
+
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (data.id) {
+      conditions.push(`u.id = $${paramIndex}`);
+      params.push(data.id.getValue);
+      paramIndex++;
+    }
+
+    if (data.email) {
+      conditions.push(`u.email = $${paramIndex}`);
+      params.push(data.email.getValue);
+      paramIndex++;
+    }
+
+    if (data.username) {
+      conditions.push(`u.username = $${paramIndex}`);
+      params.push(data.username);
+      paramIndex++;
+    }
+
+    if (data.created_at_start) {
+      conditions.push(`u.created_at BETWEEN $${paramIndex} AND $${paramIndex}`);
+      params.push(data.created_at_start, data.created_at_end);
+      paramIndex++;
+      paramIndex++;
+    }
+
+    if (data.created_at) {
+      conditions.push(`u.created_at >= $${paramIndex}`);
+      params.push(data.created_at);
+      paramIndex++;
+    }
+
+    if (data.is_verified !== undefined) {
+      conditions.push(`u.is_verified = $${paramIndex}`);
+      params.push(data.is_verified);
+      paramIndex++;
+    }
+
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const orderByClause = data.order_by ? `ORDER BY ${data.order_by}` : '';
+    const limitClause = data.limit ? `LIMIT $${paramIndex}` : '';
+    if (data.limit) {
+      params.push(data.limit);
+      paramIndex++;
+    }
+    const offsetClause = data.offset ? `OFFSET $${paramIndex}` : ``;
+    if (data.offset) {
+      params.push(String(data.offset));
+    }
+
+    const query = `
+        ${baseQuery}
+        ${whereClause}
+        GROUP BY u.id, u.username, u.email, u.password, u.provider, u.is_verified
+        ${orderByClause}
+        ${limitClause}
+        ${offsetClause};
+    `;
+
+    const countQuery = `
+    SELECT COUNT(*) AS total
+    FROM users u
+    LEFT JOIN user_role_junction urj ON u.id = urj.user_id
+    LEFT JOIN roles r ON urj.role_id = r.role_id
+    ${whereClause};
+  `;
+
+    const result = await this.db.query(query, params);
+
+    if (limitClause && offsetClause) {
+      const countResult = await this.db.query(
+        countQuery,
+        params.splice(0, params.length - 2),
+      );
+      console.log({
+        total: parseInt(countResult.rows[0].total, 10),
+      });
+    }
+
+    return result.rows.map((row) => UserFactory.toDomain(row));
   }
 }

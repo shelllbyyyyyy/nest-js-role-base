@@ -14,6 +14,7 @@ import { UpdateProvider } from './application/handler/update-provider';
 import { VerifyUser } from './application/handler/verify-user';
 import { FindByEmail } from './application/use-case/find-by-email';
 import { DeleteUser } from './application/use-case/delete-user';
+import { FindByFilter } from './application/use-case/find-by-filter';
 import { FindById } from './application/use-case/find-by-id';
 import { FindAll } from './application/use-case/find-all';
 import { UserService } from './domain/services/user.service';
@@ -46,6 +47,7 @@ const userRepository = {
     UpdateProvider,
     VerifyUser,
     BcryptService,
+    FindByFilter,
   ],
 })
 export class UserModule {}

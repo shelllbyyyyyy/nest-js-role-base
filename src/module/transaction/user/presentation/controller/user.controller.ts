@@ -8,12 +8,13 @@ import {
   InternalServerErrorException,
   Param,
   Patch,
+  Query,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
-import { ApiResponse } from '@/common/response/api';
+import { ApiResponse, ApiResponsePagination } from '@/common/response/api';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { InvalidInputError } from '@/common/exceptions/invalid-input.error';
 import { User } from '@/common/decorator/user.decorator';
@@ -27,6 +28,8 @@ import { DeleteUser } from '../../application/use-case/delete-user';
 import { FindById } from '../../application/use-case/find-by-id';
 import { FindAll } from '../../application/use-case/find-all';
 import { UpdateUserDTO } from '../dto/update-user.dto';
+import { FilterUserDTO } from '../dto/filter-user.dto';
+import { FindByFilter } from '../../application/use-case/find-by-filter';
 
 @Controller('users')
 export class UserController {
@@ -35,6 +38,7 @@ export class UserController {
     private readonly eventEmitter: EventEmitter2,
     private readonly findByEmail: FindByEmail,
     private readonly findAll: FindAll,
+    private readonly findByFilter: FindByFilter,
     private readonly findById: FindById,
     private readonly handlerService: HandlerService,
   ) {}
@@ -45,10 +49,32 @@ export class UserController {
     try {
       const user = await this.findAll.execute();
 
-      return new ApiResponse(HttpStatus.OK, 'User found', user);
+      return new ApiResponse(HttpStatus.OK, 'Users found', user);
     } catch (error) {
       throw error;
     }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('filter')
+  async findUserByFilter(@Query() data: FilterUserDTO) {
+    const result = await this.findByFilter.execute(data);
+
+    if (data.limit && data.page) {
+      const totalPages = Math.ceil(result.length / +data.limit);
+
+      return new ApiResponsePagination(
+        HttpStatus.OK,
+        'Users found',
+        result,
+        result.length,
+        +data.limit,
+        +data.page,
+        totalPages,
+      );
+    }
+
+    return new ApiResponse(HttpStatus.OK, 'Users found', result);
   }
 
   @UseGuards(JwtAuthGuard)

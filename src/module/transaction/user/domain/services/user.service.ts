@@ -8,6 +8,19 @@ import { Email } from '../value-object/email';
 import { Provider } from '../value-object/provider';
 import { UserId } from '../value-object/userId';
 
+export type Filter = {
+  id?: UserId;
+  email?: Email;
+  username?: string;
+  created_at?: Date;
+  created_at_start?: Date;
+  created_at_end?: Date;
+  limit?: number;
+  offset?: number;
+  order_by?: string;
+  is_verified?: boolean;
+};
+
 @Injectable()
 export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
@@ -93,5 +106,9 @@ export class UserService {
 
   async verifyUser(data: UserEntity): Promise<boolean> {
     return await this.userRepository.verifyUser(data);
+  }
+
+  async findByFilter(data: Filter): Promise<UserEntity[]> {
+    return await this.userRepository.filterBy(data);
   }
 }
