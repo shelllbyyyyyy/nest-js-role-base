@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
 import { IUseCase } from '@/shared/interface/use-case';
+import { Pagination } from '@/shared/interface/pagination-search.result';
 
-import { UserResponse } from '../response/user.reposne';
+import { UserResponse } from '../response/user.reponse';
 
 import { UserFactory } from '../../domain/factories/user.factory';
 import { UserService } from '../../domain/services/user.service';
@@ -12,10 +13,12 @@ import { UserId } from '../../domain/value-object/userId';
 import { FilterUserDTO } from '../../presentation/dto/filter-user.dto';
 
 @Injectable()
-export class FindByFilter implements IUseCase<FilterUserDTO, UserResponse[]> {
+export class FindByFilter
+  implements IUseCase<FilterUserDTO, Pagination<UserResponse[]>>
+{
   constructor(private readonly userService: UserService) {}
 
-  async execute(data: FilterUserDTO): Promise<UserResponse[]> {
+  async execute(data: FilterUserDTO): Promise<Pagination<UserResponse[]>> {
     const {
       email,
       is_verified,
@@ -67,8 +70,12 @@ export class FindByFilter implements IUseCase<FilterUserDTO, UserResponse[]> {
       offset,
     });
 
-    const result = UserFactory.toResponses(user);
-
-    return result;
+    return {
+      data: UserFactory.toResponses(user.data),
+      total: user.total,
+      limit: user.limit,
+      page: user.page,
+      total_pages: user.total_pages,
+    };
   }
 }

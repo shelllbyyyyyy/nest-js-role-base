@@ -1,4 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+
+import { Pagination } from '@/shared/interface/pagination-search.result';
 
 import { UserRepository } from '../repositories/user.repository';
 import { UserEntity } from '../entities/user.entity';
@@ -23,7 +25,11 @@ export type Filter = {
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    @Inject('PGUserRepository') private readonly userRepository: UserRepository,
+    @Inject('ElasticUserRepository')
+    private readonly elasticUserRepository: UserRepository,
+  ) {}
 
   async findAll(): Promise<UserEntity[]> {
     return await this.userRepository.findAll();
@@ -108,7 +114,7 @@ export class UserService {
     return await this.userRepository.verifyUser(data);
   }
 
-  async findByFilter(data: Filter): Promise<UserEntity[]> {
-    return await this.userRepository.filterBy(data);
+  async findByFilter(data: Filter): Promise<Pagination<UserEntity[]>> {
+    return await this.elasticUserRepository.filterBy(data);
   }
 }

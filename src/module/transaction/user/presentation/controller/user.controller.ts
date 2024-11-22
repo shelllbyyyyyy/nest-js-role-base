@@ -30,6 +30,10 @@ import { FindAll } from '../../application/use-case/find-all';
 import { UpdateUserDTO } from '../dto/update-user.dto';
 import { FilterUserDTO } from '../dto/filter-user.dto';
 import { FindByFilter } from '../../application/use-case/find-by-filter';
+import { QueryBus } from '@nestjs/cqrs';
+import { SearchUserQuery } from '../../application/queries/search-user.query';
+import { Pagination } from '@/shared/interface/pagination-search.result';
+import { UserResponse } from '../../application/response/user.reponse';
 
 @Controller('users')
 export class UserController {
@@ -41,6 +45,7 @@ export class UserController {
     private readonly findByFilter: FindByFilter,
     private readonly findById: FindById,
     private readonly handlerService: HandlerService,
+    private readonly queryBus: QueryBus,
   ) {}
 
   @UseGuards(AdminAuthGuard)
@@ -58,23 +63,46 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get('filter')
   async findUserByFilter(@Query() data: FilterUserDTO) {
-    const result = await this.findByFilter.execute(data);
+    const {
+      created_at,
+      created_at_end,
+      created_at_start,
+      is_verified,
+      limit,
+      page,
+      order_by,
+      username,
+      email,
+      userId,
+    } = data;
 
-    if (data.limit && data.page) {
-      const totalPages = Math.ceil(result.length / +data.limit);
+    const query = new SearchUserQuery(
+      userId,
+      email,
+      username,
+      created_at,
+      created_at_start,
+      created_at_end,
+      limit,
+      page,
+      order_by,
+      is_verified,
+    );
 
-      return new ApiResponsePagination(
-        HttpStatus.OK,
-        'Users found',
-        result,
-        result.length,
-        +data.limit,
-        +data.page,
-        totalPages,
-      );
-    }
+    const result = await this.queryBus.execute<
+      SearchUserQuery,
+      Pagination<UserResponse[]>
+    >(query);
 
-    return new ApiResponse(HttpStatus.OK, 'Users found', result);
+    return new ApiResponsePagination(
+      HttpStatus.OK,
+      'Users found',
+      result.data,
+      result.total,
+      result.limit,
+      result.page,
+      result.total_pages,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
