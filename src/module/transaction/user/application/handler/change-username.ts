@@ -7,7 +7,7 @@ import { RedisService } from '@/shared/libs/redis/redis.service';
 
 import { UserService } from '../../domain/services/user.service';
 import { UserFactory } from '../../domain/factories/user.factory';
-import { UserResponse } from '../response/user.reposne';
+import { UserResponse } from '../response/user.reponse';
 
 @Injectable()
 export class ChangeUsername

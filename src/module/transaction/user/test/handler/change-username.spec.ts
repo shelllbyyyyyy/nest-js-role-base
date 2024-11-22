@@ -13,7 +13,7 @@ import {
 
 import { UserService } from '../../domain/services/user.service';
 import { ChangeUsername } from '../../application/handler/change-username';
-import { UserResponse } from '../../application/response/user.reposne';
+import { UserResponse } from '../../application/response/user.reponse';
 
 describe('Change username Handler', () => {
   let userService: UserService;

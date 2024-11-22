@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { UserPayload } from '@/common/interface/user-payload';
-import { UserResponse } from '@/module/transaction/user/application/response/user.reposne';
+import { UserResponse } from '@/module/transaction/user/application/response/user.reponse';
 import { IUseCase } from '@/shared/interface/use-case';
 import { Tokenizer } from '@/shared/libs/tokenizer';
 

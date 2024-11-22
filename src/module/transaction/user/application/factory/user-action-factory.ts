@@ -4,7 +4,7 @@ import { IActionHandler } from '@/shared/interface/action-handler';
 import { UserUpdate } from '@/shared/interface/update-payload';
 
 import { ChangePassword } from '../handler/change-password';
-import { UserResponse } from '../response/user.reposne';
+import { UserResponse } from '../response/user.reponse';
 import { VerifyUser } from '../handler/verify-user';
 import { ChangeEmail } from '../handler/change-email';
 import { ChangeUsername } from '../handler/change-username';

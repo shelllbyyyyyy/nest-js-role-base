@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { UserActionFactory } from '../factory/user-action-factory';
 import { UserUpdate } from '@/shared/interface/update-payload';
-import { UserResponse } from '../response/user.reposne';
+import { UserResponse } from '../response/user.reponse';
 
 @Injectable()
 export class HandlerService {

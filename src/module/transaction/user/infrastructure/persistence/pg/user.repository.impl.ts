@@ -9,6 +9,7 @@ import { Provider } from '../../../domain/enum/provider';
 import { Filter } from '../../../domain/services/user.service';
 import { Email } from '../../../domain/value-object/email';
 import { UserId } from '../../../domain/value-object/userId';
+import { Pagination } from '@/shared/interface/pagination-search.result';
 
 @Injectable()
 export class UserRepositoryImpl implements UserRepository {
@@ -288,7 +289,7 @@ export class UserRepositoryImpl implements UserRepository {
     return true;
   }
 
-  async filterBy(data: Filter): Promise<UserEntity[]> {
+  async filterBy(data: Filter): Promise<any> {
     const baseQuery = `
         SELECT 
           u.id, u.username, u.email, u.password, u.provider, u.is_verified,
@@ -372,16 +373,19 @@ export class UserRepositoryImpl implements UserRepository {
 
     const result = await this.db.query(query, params);
 
-    if (limitClause && offsetClause) {
-      const countResult = await this.db.query(
-        countQuery,
-        params.splice(0, params.length - 2),
-      );
-      console.log({
-        total: parseInt(countResult.rows[0].total, 10),
-      });
-    }
+    const countResult = await this.db.query(
+      countQuery,
+      params.splice(0, params.length - 2),
+    );
 
-    return result.rows.map((row) => UserFactory.toDomain(row));
+    const total = countResult.rowCount;
+
+    return {
+      data: result.rows.map((row) => UserFactory.toDomain(row)),
+      limit: +data.limit,
+      page: Math.floor(data.offset / +data.limit) + 1,
+      total,
+      total_pages: Math.ceil(total / +data.limit),
+    };
   }
 }

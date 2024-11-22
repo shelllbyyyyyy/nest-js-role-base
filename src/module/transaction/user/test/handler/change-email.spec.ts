@@ -17,7 +17,7 @@ import {
 import { UserService } from '../../domain/services/user.service';
 import { ChangeEmail } from '../../application/handler/change-email';
 import { Email } from '../../domain/value-object/email';
-import { UserResponse } from '../../application/response/user.reposne';
+import { UserResponse } from '../../application/response/user.reponse';
 
 describe('Change Email Handler', () => {
   let userService: UserService;

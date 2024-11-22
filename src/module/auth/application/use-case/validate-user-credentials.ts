@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { UserResponse } from '@/module/transaction/user/application/response/user.reposne';
+import { UserResponse } from '@/module/transaction/user/application/response/user.reponse';
 import { IUseCase } from '@/shared/interface/use-case';
 import { BcryptService } from '@/shared/libs/bcrypt';
 

@@ -22,7 +22,7 @@ import { DynamicOAuthGuard } from '@/common/guards/dynamic-oauth.guard';
 
 import { FindByEmail } from '@/module/transaction/user/application/use-case/find-by-email';
 import { RegisterUser } from '@/module/transaction/user/application/use-case/register-user';
-import { UserResponse } from '@/module/transaction/user/application/response/user.reposne';
+import { UserResponse } from '@/module/transaction/user/application/response/user.reponse';
 import { OAuth } from '@/module/transaction/user/application/use-case/oauth';
 
 import { RegisterDTO } from '../dto/register.dto';

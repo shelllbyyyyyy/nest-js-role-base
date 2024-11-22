@@ -10,7 +10,7 @@ import {
 } from '@/shared/test/constant';
 
 import { UserService } from '../../domain/services/user.service';
-import { UserResponse } from '../../application/response/user.reposne';
+import { UserResponse } from '../../application/response/user.reponse';
 import { VerifyUser } from '../../application/handler/verify-user';
 
 describe('Verify User Handler', () => {

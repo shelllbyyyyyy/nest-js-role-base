@@ -4,7 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import { publicKey } from '@/shared/module';
-import { RoleResponse } from '@/module/transaction/user/application/response/user.reposne';
+import { RoleResponse } from '@/module/transaction/user/application/response/user.reponse';
 
 import { UserPayload } from '../interface/user-payload';
 

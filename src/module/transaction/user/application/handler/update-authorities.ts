@@ -6,7 +6,7 @@ import { RedisService } from '@/shared/libs/redis/redis.service';
 
 import { UserService } from '../../domain/services/user.service';
 import { UserFactory } from '../../domain/factories/user.factory';
-import { RoleResponse, UserResponse } from '../response/user.reposne';
+import { RoleResponse, UserResponse } from '../response/user.reponse';
 import { RoleEntity } from '../../domain/entities/role.entity';
 import { InvalidInputError } from '@/common/exceptions/invalid-input.error';
 

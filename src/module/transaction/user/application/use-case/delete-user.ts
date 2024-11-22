@@ -4,7 +4,7 @@ import { IUseCase } from '@/shared/interface/use-case';
 import { RedisService } from '@/shared/libs/redis/redis.service';
 
 import { UserService } from '../../domain/services/user.service';
-import { UserResponse } from '../response/user.reposne';
+import { UserResponse } from '../response/user.reponse';
 import { UserFactory } from '../../domain/factories/user.factory';
 
 @Injectable()

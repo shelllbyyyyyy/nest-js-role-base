@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { IUseCase } from '@/shared/interface/use-case';
 import { RedisService } from '@/shared/libs/redis/redis.service';
 
-import { UserResponse } from '../response/user.reposne';
+import { UserResponse } from '../response/user.reponse';
 import { UserService } from '../../domain/services/user.service';
 import { UserFactory } from '../../domain/factories/user.factory';
 import { UserId } from '../../domain/value-object/userId';

@@ -1,7 +1,7 @@
 import {
   UserResponse,
   RoleResponse,
-} from '../../application/response/user.reposne';
+} from '../../application/response/user.reponse';
 import { RoleEntity } from '../entities/role.entity';
 import { UserEntity } from '../entities/user.entity';
 import { Email } from '../value-object/email';

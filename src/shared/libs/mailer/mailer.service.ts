@@ -4,7 +4,7 @@ import * as ejs from 'ejs';
 
 import { UserEntity as User } from '@/module/transaction/user/domain/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
-import { UserResponse } from '@/module/transaction/user/application/response/user.reposne';
+import { UserResponse } from '@/module/transaction/user/application/response/user.reponse';
 
 @Injectable()
 export class EmailService {

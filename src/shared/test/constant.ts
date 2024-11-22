@@ -10,7 +10,7 @@ import { Email } from '../../module/transaction/user/domain/value-object/email';
 import { Provider as UserProvider } from '../../module/transaction/user/domain/enum/provider';
 import { Provider } from '../../module/transaction/user/domain/value-object/provider';
 import { UserId } from '../../module/transaction/user/domain/value-object/userId';
-import { UserResponse } from '../../module/transaction/user/application/response/user.reposne';
+import { UserResponse } from '../../module/transaction/user/application/response/user.reponse';
 
 import { UserUpdate } from '../interface/update-payload';
 

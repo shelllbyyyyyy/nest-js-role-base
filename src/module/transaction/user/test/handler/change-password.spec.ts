@@ -16,7 +16,7 @@ import {
 
 import { UserService } from '../../domain/services/user.service';
 import { ChangePassword } from '../../application/handler/change-password';
-import { UserResponse } from '../../application/response/user.reposne';
+import { UserResponse } from '../../application/response/user.reponse';
 
 describe('Change Password Handler', () => {
   let userService: UserService;

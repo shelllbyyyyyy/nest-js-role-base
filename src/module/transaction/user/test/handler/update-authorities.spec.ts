@@ -13,7 +13,7 @@ import {
 } from '@/shared/test/constant';
 
 import { UserService } from '../../domain/services/user.service';
-import { UserResponse } from '../../application/response/user.reposne';
+import { UserResponse } from '../../application/response/user.reponse';
 import { UpdateAuthorities } from '../../application/handler/update-authorities';
 import { RoleEntity } from '../../domain/entities/role.entity';
 

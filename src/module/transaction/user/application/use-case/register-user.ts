@@ -5,7 +5,7 @@ import { IUseCase } from '@/shared/interface/use-case';
 import { RedisService } from '@/shared/libs/redis/redis.service';
 import { BcryptService } from '@/shared/libs/bcrypt';
 
-import { UserResponse } from '../response/user.reposne';
+import { UserResponse } from '../response/user.reponse';
 import { Email } from '../../domain/value-object/email';
 import { UserFactory } from '../../domain/factories/user.factory';
 import { UserService } from '../../domain/services/user.service';
