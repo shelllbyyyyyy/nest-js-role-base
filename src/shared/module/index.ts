@@ -7,6 +7,7 @@ import {
   JwtSignOptions,
   JwtVerifyOptions,
 } from '@nestjs/jwt';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 const privateKey = readFileSync('./keys/private.pem', 'utf8');
 export const publicKey = readFileSync('./keys/public.pem', 'utf8');
@@ -31,6 +32,7 @@ export const ConfigModule = Config.forRoot({
     GOOGLE_CLIENT_SECRET: Joi.string().required(),
     GITHUB_CLIENT_ID: Joi.string().required(),
     GITHUB_CLIENT_SECRET: Joi.string().required(),
+    ELASTIC_NODE: Joi.string().required(),
   }),
   envFilePath: '.env',
 });
@@ -59,6 +61,13 @@ export const JwtModule = Jwt.registerAsync({
           return configService.get<string>('ACCESS_TOKEN_SECRET');
       }
     },
+  }),
+  inject: [ConfigService],
+});
+
+export const ThrottleModule = ThrottlerModule.forRootAsync({
+  useFactory: async (configService: ConfigService) => ({
+    throttlers: [{ ttl: 1, limit: 2 }],
   }),
   inject: [ConfigService],
 });

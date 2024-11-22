@@ -34,6 +34,22 @@ services:
     networks:
       - app-network
 
+  elastic-primary:
+    image: 'elasticsearch:8.15.4'
+    container_name: elastic-primary
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    restart: always
+    networks:
+      - app-network
+
   nest-app:
     build:
       context: .
@@ -44,6 +60,8 @@ services:
     ports:
       - '4000:4000'
     depends_on:
+      elastic-primary:
+        condition: service_started
       redis-primary:
         condition: service_healthy
       postgres-primary:
@@ -53,6 +71,7 @@ services:
 
 volumes:
   data_postgresql:
+  elasticsearch_data:
 networks:
   app-network:
     driver: bridge
