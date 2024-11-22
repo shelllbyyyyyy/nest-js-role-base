@@ -2,47 +2,52 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 import {
   deepCopy,
+  email,
   mockUserService,
-  newEmail,
   paginationUserEntity,
   paginationUserResponse,
-  username,
 } from '@/shared/test/constant';
 
+import { SearchUserHandler } from '../../application/queries/search-user.handler';
+import { SearchUserQuery } from '../../application/queries/search-user.query';
 import { UserService } from '../../domain/services/user.service';
-import { FindByFilter } from '../../application/use-case/find-by-filter';
 
-describe('Find All', () => {
-  let findByFilter: FindByFilter;
+describe('Search User Handler', () => {
+  let searchUserHandler: SearchUserHandler;
   let userService: UserService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        FindByFilter,
-        { provide: UserService, useValue: mockUserService },
+        SearchUserHandler,
+        {
+          provide: UserService,
+          useValue: mockUserService,
+        },
       ],
     }).compile();
 
     userService = module.get<UserService>(UserService);
-    findByFilter = module.get<FindByFilter>(FindByFilter);
+    searchUserHandler = module.get<SearchUserHandler>(SearchUserHandler);
   });
 
   it('Should defined', () => {
     expect(userService).toBeDefined();
-    expect(findByFilter).toBeDefined();
+    expect(searchUserHandler).toBeDefined();
   });
 
-  it('Should return list of user success', async () => {
+  it('Should success filter user', async () => {
     mockUserService.findByFilter.mockResolvedValue(paginationUserEntity);
 
-    const result = await findByFilter.execute({ username: username });
+    const result = await searchUserHandler.execute(
+      new SearchUserQuery(undefined, email),
+    );
 
     expect(result).toEqual(paginationUserResponse);
     expect(mockUserService.findByFilter).toHaveBeenCalled();
   });
 
-  it('Should return list of user success of zero', async () => {
+  it('Should success filter user zero', async () => {
     const copyEntity = deepCopy(paginationUserEntity);
     copyEntity['data'] = [];
     copyEntity['limit'] = 0;
@@ -59,7 +64,9 @@ describe('Find All', () => {
 
     mockUserService.findByFilter.mockResolvedValue(copyEntity);
 
-    const result = await findByFilter.execute({ email: newEmail });
+    const result = await searchUserHandler.execute(
+      new SearchUserQuery(undefined, email),
+    );
 
     expect(result).toEqual(copyResponse);
     expect(mockUserService.findByFilter).toHaveBeenCalled();

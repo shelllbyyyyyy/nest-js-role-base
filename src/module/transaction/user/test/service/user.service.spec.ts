@@ -1,13 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { UserRepository } from '../../domain/repositories/user.repository';
-import { UserService } from '../../domain/services/user.service';
-import { Email } from '../../domain/value-object/email';
-import { UserId } from '../../domain/value-object/userId';
-
 import {
   authorities,
   copyUser,
+  deepCopy,
   id,
   invalidEmail,
   mockUserRepository,
@@ -17,11 +13,17 @@ import {
   newRole,
   newUser,
   newUsername,
+  paginationUserEntity,
   password,
   username,
   userProvider,
   validEmail,
 } from '@/shared/test/constant';
+
+import { UserRepository } from '../../domain/repositories/user.repository';
+import { UserService } from '../../domain/services/user.service';
+import { Email } from '../../domain/value-object/email';
+import { UserId } from '../../domain/value-object/userId';
 import { Provider } from '../../domain/value-object/provider';
 import { RoleEntity } from '../../domain/entities/role.entity';
 
@@ -34,14 +36,19 @@ describe('UserService', () => {
       providers: [
         UserService,
         {
-          provide: UserRepository,
+          provide: 'PGUserRepository',
+          useValue: mockUserRepository,
+        },
+        {
+          provide: 'ElasticUserRepository',
           useValue: mockUserRepository,
         },
       ],
     }).compile();
 
     service = module.get<UserService>(UserService);
-    repository = module.get<UserRepository>(UserRepository);
+    repository = module.get<UserRepository>('PGUserRepository');
+    repository = module.get<UserRepository>('ElasticUserRepository');
 
     jest.clearAllMocks();
   });
@@ -356,22 +363,29 @@ describe('UserService', () => {
 
   describe('Find User By Filter', () => {
     it('Should return list of user', async () => {
-      mockUserRepository.filterBy.mockResolvedValue([newUser, copyUser]);
+      mockUserRepository.filterBy.mockResolvedValue(paginationUserEntity);
 
       const result = await service.findByFilter({ email: validEmail });
 
-      expect(result).toEqual([newUser, copyUser]);
+      expect(result).toEqual(paginationUserEntity);
       expect(mockUserRepository.filterBy).toHaveBeenCalledWith({
         email: validEmail,
       });
     });
 
     it('Should return list of user zero', async () => {
-      mockUserRepository.filterBy.mockResolvedValue([]);
+      const copyResponse = deepCopy(paginationUserEntity);
+      copyResponse['data'] = [];
+      copyResponse['limit'] = 0;
+      copyResponse['total'] = 0;
+      copyResponse['page'] = 0;
+      copyResponse['total_pages'] = 0;
+
+      mockUserRepository.filterBy.mockResolvedValue(copyResponse);
 
       const result = await service.findByFilter({ email: validEmail });
 
-      expect(result).toEqual([]);
+      expect(result).toEqual(copyResponse);
       expect(mockUserRepository.filterBy).toHaveBeenCalledWith({
         email: validEmail,
       });

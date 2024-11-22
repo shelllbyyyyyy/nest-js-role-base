@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { QueryBus } from '@nestjs/cqrs';
 
 import { RedisService } from '@/shared/libs/redis/redis.service';
 import { BcryptService } from '@/shared/libs/bcrypt';
@@ -36,11 +37,12 @@ import {
   newRole,
   findAllUserControllerResponse,
   findAllUserControllerResponsePagination,
+  paginationUserResponse,
 } from '@/shared/test/constant';
 
-import { UserService } from '../../domain/services/user.service';
-import { UserRepository } from '../../domain/repositories/user.repository';
-import { UserController } from '../../presentation/controller/user.controller';
+import { FindByFilter } from '../../application/use-case/find-by-filter';
+import { SearchUserHandler } from '../../application/queries/search-user.handler';
+import { SearchUserQuery } from '../../application/queries/search-user.query';
 import { FindByEmail } from '../../application/use-case/find-by-email';
 import { DeleteUser } from '../../application/use-case/delete-user';
 import { FindById } from '../../application/use-case/find-by-id';
@@ -53,10 +55,12 @@ import { ChangeEmail } from '../../application/handler/change-email';
 import { UpdateAuthorities } from '../../application/handler/update-authorities';
 import { UpdateProvider } from '../../application/handler/update-provider';
 import { VerifyUser } from '../../application/handler/verify-user';
+import { RoleEntity } from '../../domain/entities/role.entity';
+import { UserRepository } from '../../domain/repositories/user.repository';
+import { UserService } from '../../domain/services/user.service';
 import { Email } from '../../domain/value-object/email';
 import { Provider } from '../../domain/value-object/provider';
-import { RoleEntity } from '../../domain/entities/role.entity';
-import { FindByFilter } from '../../application/use-case/find-by-filter';
+import { UserController } from '../../presentation/controller/user.controller';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -77,6 +81,12 @@ describe('UserController', () => {
   let updateProvider: UpdateProvider;
   let verifyUser: VerifyUser;
   let bcryptService: BcryptService;
+  let searchUserHandler: SearchUserHandler;
+  let queryBus: QueryBus;
+
+  const mockQueryBus = {
+    execute: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -96,6 +106,8 @@ describe('UserController', () => {
         UpdateProvider,
         VerifyUser,
         FindByFilter,
+        SearchUserHandler,
+        QueryBus,
         {
           provide: BcryptService,
           useValue: mockBcryptService,
@@ -134,6 +146,8 @@ describe('UserController', () => {
     verifyUser = module.get<VerifyUser>(VerifyUser);
     bcryptService = module.get<BcryptService>(BcryptService);
     findByFilter = module.get<FindByFilter>(FindByFilter);
+    searchUserHandler = module.get<SearchUserHandler>(SearchUserHandler);
+    queryBus = module.get<QueryBus>(QueryBus);
 
     jest.clearAllMocks();
   });
@@ -157,6 +171,8 @@ describe('UserController', () => {
     expect(verifyUser).toBeDefined();
     expect(bcryptService).toBeDefined();
     expect(findByFilter).toBeDefined();
+    expect(searchUserHandler).toBeDefined();
+    expect(queryBus).toBeDefined();
   });
 
   describe('Find all user', () => {
@@ -184,51 +200,43 @@ describe('UserController', () => {
 
   describe('Find user by filter', () => {
     it('Should return list of user', async () => {
-      mockUserService.findByFilter.mockResolvedValue([newUser, newUser]);
+      const query = jest
+        .spyOn(queryBus, 'execute')
+        .mockResolvedValue(paginationUserResponse);
 
       const result = await controller.findUserByFilter({
         email: email,
-      });
-
-      expect(result).toEqual(findAllUserControllerResponse);
-      expect(mockUserService.findByFilter).toHaveBeenCalledWith({
-        email: validEmail,
-        offset: 0,
-      });
-    });
-
-    it('Should return list of user zero', async () => {
-      mockUserService.findByFilter.mockResolvedValue([]);
-
-      const result = await controller.findUserByFilter({
-        email: email,
-      });
-
-      const copy = findAllUserControllerResponse.clone();
-      copy.data = [];
-
-      expect(result).toEqual(copy);
-      expect(mockUserService.findByFilter).toHaveBeenCalledWith({
-        email: validEmail,
-        offset: 0,
-      });
-    });
-
-    it('Should return list of user with pagination', async () => {
-      mockUserService.findByFilter.mockResolvedValue([newUser, newUser]);
-
-      const result = await controller.findUserByFilter({
-        email: email,
-        limit: 5,
-        page: 1,
       });
 
       expect(result).toEqual(findAllUserControllerResponsePagination);
-      expect(mockUserService.findByFilter).toHaveBeenCalledWith({
-        email: validEmail,
-        limit: 5,
-        offset: 0,
+      expect(query).toHaveBeenCalledWith(new SearchUserQuery(undefined, email));
+    });
+
+    it('Should return list of user zero', async () => {
+      const copyResponse = deepCopy(paginationUserResponse);
+      copyResponse['data'] = [];
+      copyResponse['limit'] = 0;
+      copyResponse['total'] = 0;
+      copyResponse['page'] = 0;
+      copyResponse['total_pages'] = 0;
+
+      const query = jest
+        .spyOn(queryBus, 'execute')
+        .mockResolvedValue(copyResponse);
+
+      const result = await controller.findUserByFilter({
+        email: email,
       });
+
+      const copy = findAllUserControllerResponsePagination.clone();
+      copy.data = [];
+      copy.limit = 0;
+      copy.total = 0;
+      copy.page = 0;
+      copy.total_pages = 0;
+
+      expect(result).toEqual(copy);
+      expect(query).toHaveBeenCalledWith(new SearchUserQuery(undefined, email));
     });
   });
 

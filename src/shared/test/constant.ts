@@ -101,6 +101,22 @@ const currentUser: UserPayload = {
   }),
 };
 
+const paginationUserEntity = {
+  data: [newUser, newUser],
+  total: 2,
+  limit: 5,
+  page: 1,
+  total_pages: 1,
+};
+
+const paginationUserResponse = {
+  data: [userResponse, userResponse],
+  total: 2,
+  limit: 5,
+  page: 1,
+  total_pages: 1,
+};
+
 const mockRegisterUser = {
   execute: jest.fn(),
 };
@@ -269,4 +285,6 @@ export {
   oAuthControllerResponse,
   findAllUserControllerResponse,
   findAllUserControllerResponsePagination,
+  paginationUserEntity,
+  paginationUserResponse,
 };
