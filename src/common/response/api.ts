@@ -68,8 +68,8 @@ export class ApiResponsePagination<T> {
   errors: string | null;
   data: T;
   page: number;
-  total: number;
   limit: number;
+  total: number;
   total_pages: number;
 
   constructor(
@@ -87,9 +87,9 @@ export class ApiResponsePagination<T> {
     this.message = message;
     this.data = data;
     this.limit = limit;
+    this.total = total;
     this.page = page;
     this.total_pages = total_pages;
-    this.total = total;
   }
 
   clone(): ApiResponsePagination<T> {
